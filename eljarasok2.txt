@@ -1,0 +1,37 @@
+DROP PROCEDURE IF EXISTS novelNepesseg;
+DELIMITER $$
+CREATE PROCEDURE novelNepesseg()
+BEGIN
+	UPDATE orszagok SET nepesseg = nepesseg + 100;
+END $$
+DELIMITER ;
+
+CALL novelNepesseg();
+
+DROP PROCEDURE IF EXISTS novelNepesseg2;
+DELIMITER $$
+CREATE PROCEDURE novelNepesseg2(x INT)
+BEGIN
+	UPDATE orszagok SET nepesseg = nepesseg + x;
+END $$
+DELIMITER ;
+
+CALL novelNepesseg2(123);
+
+DROP PROCEDURE IF EXISTS haromszog;
+DELIMITER $$
+CREATE PROCEDURE haromszog(IN a INT, IN b INT, IN c INT, OUT K INT, OUT T FLOAT)
+BEGIN
+	DECLARE S FLOAT DEFAULT 0.0;
+	DECLARE temp FLOAT DEFAULT 0.0;
+	SET K = (a+b+c);
+	SET S = K/2.0;
+	SET temp = S*(S-a)*(S-b)*(S-c);
+	SET T = POW(temp,0.5);
+END $$
+DELIMITER ;
+
+SET @K = 0;
+SET @T = 0;
+CALL haromszog(3,4,5,@K,@T);
+SELECT @K AS 'Kerület', @T AS 'Terület';

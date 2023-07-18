@@ -1,0 +1,61 @@
+#trigger, ami akkor fut le, ha beszúrunk a tulajdonos táblába egy új sort, ha rosszul írjuk be a nevet, törölje ki a spaceket, és nagybetűsítse
+DROP TRIGGER IF EXISTS tulajdonos_before_insert;
+DELIMITER $$
+CREATE TRIGGER tulajdonos_before_insert
+BEFORE INSERT
+ON tulajdonos FOR EACH ROW
+BEGIN
+	SET NEW.nev = UPPER(TRIM(NEW.nev));
+END $$
+DELIMITER ;
+
+DELETE FROM tulajdonos WHERE tulajdonos.id = 13;
+INSERT INTO tulajdonos VALUES(13,'  varga pista','06205063420');
+
+#egy ember nevén max 3 ingatlan legyen
+DROP TRIGGER IF EXISTS ingatlan_before_insert;
+DELIMITER $$
+CREATE TRIGGER ingatlan_before_insert
+BEFORE INSERT
+ON ingatlan FOR EACH ROW
+BEGIN
+	DECLARE db INTEGER DEFAULT 0 ;
+	SELECT COUNT(*) INTO db FROM ingatlan WHERE tulajdonos = NEW.tulajdonos ;
+	IF db > 3 THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Túl sok ingatlan' ;
+	END IF;
+END $$
+DELIMITER ;
+
+INSERT INTO ingatlan VALUES (31,8696,74,'lakas',100,1) ;
+
+#beakarok vinni egy új tulajdonost, szeretném ellenőrizni, hogy jó e a telefonszáma (20as, 30as, 70es), ha nem olyan, írja ki, hogy nincs ilyen szolgáltató
+DROP TRIGGER IF EXISTS tulajdonos_before_insert;
+DELIMITER $$
+CREATE TRIGGER tulajdonos_before_insert
+BEFORE INSERT
+ON tulajdonos FOR EACH ROW
+BEGIN
+	IF NEW.telefon NOT LIKE "0620%" AND NEW.telefon NOT LIKE "0630%" AND NEW.telefon NOT LIKE "0670%" THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Nincs ilyen szolgáltató' ;
+	END IF;
+END $$
+DELIMITER ;
+
+INSERT INTO tulajdonos VALUES (14, 'Kovács István', "0692643264");
+INSERT INTO tulajdonos VALUES (15, 'Takács István', "0670643264");
+
+#trigger, ami akkor fut le, ha egy városnak megakarom változtatni az adatait, ne engedje megváltoztatni a nevet vagy az irányítószámot
+DROP TRIGGER IF EXISTS varos_before_update;
+DELIMITER $$
+CREATE TRIGGER varos_before_update
+BEFORE UPDATE
+ON varos FOR EACH ROW
+BEGIN
+	IF NEW.id <> OLD.id OR NEW.nev <> OLD.nev THEN
+		SIGNAL SQLSTATE '45003' SET MESSAGE_TEXT = 'Nem lehet megváltoztatni a város nevét vagy irányítószámát!' ;
+	END IF;
+END $$
+DELIMITER ;
+
+UPDATE varos SET nev = 'Elment az öszöd!' WHERE nev = 'Balatonőszöd'

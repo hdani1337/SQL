@@ -1,0 +1,18 @@
+DROP PROCEDURE IF EXISTS my_print;
+DELIMITER $$
+CREATE PROCEDURE my_print()
+BEGIN
+	SELECT 'Sieg Heil';
+END $$
+DELIMITER ;
+
+CALL my_print()
+
+#bank táblában kamatokat növelni
+DROP PROCEDURE IF EXISTS novel;
+DELIMITER $$
+CREATE PROCEDURE novel(szazalek INT)
+BEGIN
+	UPDATE bank SET kamat = kamat + szazalek;
+END $$
+DELIMITER ;

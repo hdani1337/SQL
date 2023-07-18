@@ -1,0 +1,87 @@
+#melyik tulajdonosnak hány kutyája van?
+SELECT nev AS 'Tulajdonos', COUNT(*) AS 'Kutyusok száma'
+FROM tulajdonos, tulajdonos_kutya
+WHERE tulajdonos.id = tulajdonos_kutya.tulajdonos_id
+GROUP BY nev
+
+#csoportosítsuk a kutyákat fajta szerint
+SELECT fajta AS 'Fajta', COUNT(*) AS 'Darab'
+FROM kutya
+GROUP BY kutya.fajta;
+
+#csoportosítsuk a kutyákat fajta és nemek szerint
+SELECT fajta AS 'Fajta', nem AS 'Nem', COUNT(*) AS 'Darab'
+FROM kutya
+GROUP BY kutya.fajta, kutya.nem;
+
+#melyik kutya hány oltást kapott?
+SELECT kutya.id AS 'Kutyus ID', COUNT(*) AS 'Oltások száma'
+FROM oltas, kutya
+WHERE kutya.id = oltas.kutya_id
+GROUP BY kutya_id
+
+#azok a kutyák, akik mind a három oltást megkapták
+SELECT kutya.id AS 'Kutyus ID', COUNT(*) AS 'Oltások száma'
+FROM oltas, kutya
+WHERE kutya.id = oltas.kutya_id
+GROUP BY kutya_id
+HAVING COUNT(*) >= 3
+
+#melyik városban hány kutyus él?
+SELECT tulajdonos.varos AS 'Város', COUNT(*) AS 'Kutyusok száma'
+FROM tulajdonos, tulajdonos_kutya
+WHERE tulajdonos.id = tulajdonos_kutya.tulajdonos_id
+GROUP BY tulajdonos.varos;
+
+#azoknak a budapestieknek a nevei, akiknek legalább két kutyája van
+SELECT tulajdonos.nev AS 'Tulajdonos', COUNT(*) AS 'Kutyusok száma'
+FROM tulajdonos, tulajdonos_kutya
+WHERE tulajdonos.id = tulajdonos_kutya.tulajdonos_id AND tulajdonos.varos LIKE "%dapest" #egyik helyen Budapest el van írva :D
+GROUP BY tulajdonos.nev
+HAVING COUNT(*) >= 2;
+
+#írjuk ki a kutyákról, hogy azok kanok vagy szukák
+SELECT kutya.id AS 'Kutyus ID', 
+CASE
+    WHEN kutya.nem = 'K' THEN 'Kan'
+    WHEN kutya.nem = 'S' THEN 'Szuka'
+END AS 'Kutyus neme'
+FROM kutya
+
+#kié a legidősebb kutya?
+SELECT * 
+FROM tulajdonos, tulajdonos_kutya, kutya
+WHERE tulajdonos.id = tulajdonos_kutya.tulajdonos_id AND tulajdonos_kutya.kutya_id = kutya.id
+ORDER BY kutya.szuletesi_ev
+LIMIT 1;
+
+#a tulajdonosok közül kiknek van telekomos telefonszáma?
+SELECT tulajdonos.nev AS 'Tulajdonos', tulajdonos.telefon AS 'Telefonszám'
+FROM tulajdonos
+WHERE tulajdonos.telefon LIKE "0630%";
+
+#mennyi fajtánként a kutyák átlagéletkora?
+SELECT kutya.fajta AS 'Fajta', (2023-AVG(kutya.szuletesi_ev)) AS 'Átlag életkor'
+FROM kutya
+GROUP BY kutya.fajta;
+
+#azok a kutyafajták, melyeknek átlagéletkora legalább 9 év
+SELECT kutya.fajta AS 'Fajta', (2023-AVG(kutya.szuletesi_ev)) AS 'Átlag életkor'
+FROM kutya
+GROUP BY kutya.fajta
+HAVING (2023-AVG(kutya.szuletesi_ev)) >= 9;
+
+#egyik kutyus születési évét növeljük meg 1-el
+UPDATE kutya
+SET szuletesi_ev = szuletesi_ev+1
+WHERE kutya.id = 1
+
+#nagykanizsai tulajdonosok neve, akik gmailt használnak
+SELECT tulajdonos.nev AS 'Tulajdonos', tulajdonos.email AS 'E-mail cím'
+FROM tulajdonos
+WHERE tulajdonos.varos = "Nagykanizsa" AND tulajdonos.email LIKE "%gmail%";
+
+#átlagnál idősebb kutyusok azonosítója és fajtája
+SELECT kutya.id AS 'Kutyus ID', kutya.fajta AS 'Fajta'
+FROM kutya
+WHERE kutya.szuletesi_ev > (SELECT (2023-AVG(kutya.szuletesi_ev)) FROM kutya)

@@ -1,0 +1,82 @@
+DROP TABLE IF EXISTS diakok;
+DROP TABLE IF EXISTS diak_log;
+DROP TABLE IF EXISTS diak_log_delete;
+CREATE TABLE diakok(
+	id INTEGER,
+	nev VARCHAR(35),
+	atlag FLOAT,
+	osztondij INT
+);
+
+INSERT INTO diakok VALUES(1, 'Jóska Pista', 3.5);
+
+CREATE TABLE diak_log(
+	id INTEGER,
+	datum DATETIME,
+	regi FLOAT,
+	uj FLOAT
+);
+
+CREATE TABLE diak_log_delete(
+	id INTEGER,
+	nev VARCHAR(35),
+	datum DATETIME,
+	felhasznalo VARCHAR(35)
+);
+
+#Módosításnál logolás, ösztöndíj újraszámolása
+DELIMITER $$
+CREATE TRIGGER diakok_before_update
+BEFORE UPDATE
+ON diakok FOR EACH ROW
+BEGIN
+	INSERT INTO diak_log VALUES(id, NOW(), OLD.atlag, NEW.atlag);
+	UPDATE diakok SET osztondij = osztondij(NEW.atlag);
+END $$
+DELIMITER;
+
+#Törlésnél logolás
+DELIMITER $$
+CREATE TRIGGER diakok_after_delete
+AFTER DELETE
+ON diakok FOR EACH ROW
+BEGIN
+	INSERT INTO diak_log_delete VALUES(OLD.id, OLD.nev, NOW(), CURRENT_USER());
+	UPDATE diakok SET osztondij = osztondij(NEW.atlag);
+END $$
+DELIMITER;
+
+UPDATE diakok SET atlag = 4.5 WHERE id = 1;
+
+#Új adat beszúrásánál átlag ellenőrzése, nevet nagybetűre, ösztöndíj beállítása
+DELIMITER $$
+CREATE TRIGGER diakok_before_insert
+BEFORE INSERT
+ON diakok FOR EACH ROW
+BEGIN
+	IF NEW.atlag < 1 OR NEW.atlag > 5 THEN
+		SET NEW.atlag = 3.0;
+	END IF;
+	SET NEW.nev = UPPER(NEW.nev);
+	SET NEW.osztondij = osztondij(NEW.atlag);
+END $$
+DELIMITER;
+
+INSERT INTO diakok VALUES(2,'varga pista',5.3)
+
+#Ösztöndíj számító függvény
+DROP FUNCTION IF EXISTS osztondij;
+DELIMITER $$
+
+CREATE FUNCTION osztondij(atlag FLOAT) RETURNS INT
+BEGIN
+	DECLARE moneymoneyyeah INTEGER DEFAULT 0;
+	IF atlag >= 1.0 AND atlag <= 3.0 THEN
+		SET moneymoneyyeah = 25000;
+	ELSE
+		SET moneymoneyyeah = 35000;
+	END IF;
+	RETURN moneymoneyyeah;
+END $$
+
+DELIMITER ;

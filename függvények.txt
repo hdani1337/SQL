@@ -1,0 +1,89 @@
+#HOZAM FÜGGVÉNY
+DROP FUNCTION IF EXISTS hozam;
+DELIMITER $$
+
+CREATE FUNCTION hozam(alap INT, kamat INT, ev INT) RETURNS INT
+BEGIN
+	DECLARE temp FLOAT;
+	DECLARE h FLOAT;
+	SET temp = (100.0 + kamat) / 100.0;
+	SET h = alap * pow(temp,ev);
+	RETURN h;
+END $$
+
+DELIMITER ;
+
+#hozam függvény tesztelélse egy egyszerű táblán
+CREATE TABLE bank(
+	nev VARCHAR(50),
+	osszeg INTEGER,
+	kamat INTEGER,
+	ev INTEGER
+);
+INSERT INTO bank VALUES('Kovács',1000,5,8);
+INSERT INTO bank VALUES('Varga',2000,2,8);
+INSERT INTO bank VALUES('Horváth',2000,10,8);
+INSERT INTO bank VALUES('Szabó',5000,15,20);
+SELECT  nev, osszeg, kamat, ev, hozam(osszeg,kamat,ev) AS 'Hozam';
+
+#TELEFONOS PERCDÍJ FÜGGVÉNY
+#0-10perc 8ft/perc
+#11+perc 6ft/perc
+
+DROP FUNCTION IF EXISTS telefon;
+DELIMITER $$
+
+CREATE FUNCTION telefon(perc INT) RETURNS INT
+BEGIN
+	DECLARE ar INTEGER DEFAULT 0;
+	IF perc > 10 THEN
+		SET ar = perc * 8;
+	ELSE
+		SET ar = 80 + (perc-10)*6;
+	END IF;
+	RETURN ar;
+END $$
+
+DELIMITER ;
+
+#Kerekítés függvény
+
+DROP FUNCTION IF EXISTS kerekit;
+DELIMITER $$
+
+CREATE FUNCTION kerekit(osszeg INT) RETURNS INT
+BEGIN
+	DECLARE maradek INTEGER DEFAULT 0;
+	DECLARE kerekitett INTEGER DEFAULT 0;
+	SET maradek = MOD(osszeg,10);
+	SET kerekitett = osszeg - maradek;
+	
+	IF maradek >= 3 AND maradek <= 7 THEN
+		SET kerekitett = kerekitett+5;
+	ELSE
+		IF maradek >= 8 THEN
+			SET kerekitett = kerekitett + 10;
+		END IF;
+	END IF;
+	
+	RETURN kerekitett;
+END $$
+
+DELIMITER ;
+
+#szummázó függvény
+DROP FUNCTION IF EXISTS my_sum;
+DELIMITER $$
+
+CREATE FUNCTION my_sum(n INT) RETURNS INT
+BEGIN
+	DECLARE osszeg INTEGER DEFAULT 0;
+	DECLARE i INTEGER DEFAULT 0;
+	WHILE i <= n DO
+		SET osszeg = osszeg + i;
+		SET i = i+1;
+	END WHILE;
+	RETURN osszeg;
+END $$
+
+DELIMITER ;

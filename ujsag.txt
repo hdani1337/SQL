@@ -1,0 +1,55 @@
+#melyik újságnak hány fajta rovata van
+SELECT u.nev AS 'Újság neve', COUNT(*) AS 'Rovatok száma'
+FROM ujsag u
+LEFT JOIN ujsag_tartalom
+ON u.id = ujsag_tartalom.ujsag_id
+GROUP BY u.nev;
+
+#melyik újságnak hány előfizetője van
+SELECT u.nev AS 'Újság neve', COUNT(*) AS 'Előfizetők száma'
+FROM ujsag u
+LEFT JOIN ujsag_elofizeto
+ON u.id = ujsag_elofizeto.ujsag_id
+GROUP BY u.nev;
+
+#legdrágább újság neve
+SELECT u.nev AS 'Újság neve', u.ar AS 'Ár'
+FROM ujsag u
+ORDER BY 2 DESC
+LIMIT 1;
+
+#csoportosítsuk az előfizetőket lakhely szerint
+SELECT e.varos AS 'Város', COUNT(*) AS 'Előfizetők száma a városban'
+FROM elofizeto e
+GROUP BY e.varos;
+
+#azoknak az előfizetőknek a neve, akik olyan újságot olvasnak, amiben van gazdasági rovat
+SELECT e.nev AS 'Előfizető neve'
+FROM elofizeto e, ujsag_elofizeto ue, ujsag_tartalom ut
+WHERE e.id = ue.elofizeto_id AND ut.ujsag_id = ue.ujsag_id AND ut.tartalom = 'Gazadaság'
+GROUP BY e.nev;
+
+#azoknak az előfizetőknek a neve és az újságnak a neve, amikre az előfizető 2016 és 2020 között fizetett elő
+SELECT e.nev AS 'Előfizető neve', u.nev AS 'Újság név', ue.datum AS 'Dátum'
+FROM elofizeto e, ujsag_elofizeto ue, ujsag u
+WHERE e.id = ue.elofizeto_id AND u.id = ue.ujsag_id AND ue.datum > '2016.01.01.' AND ue.datum < '2020.01.01';
+
+#azoknak az előfizetőknek a neve, aki legalább 3 újságra előfizetett
+SELECT e.nev AS 'Előfizető neve', COUNT(e.nev) AS 'Előfizetések száma'
+FROM elofizeto e, ujsag_elofizeto ue
+WHERE e.id = ue.elofizeto_id
+GROUP BY e.nev
+HAVING COUNT(e.nev)>=3;
+
+#előfizető neve, fővárosi vagy nem fővárosi
+SELECT e.nev AS 'Előfizető neve', e.varos AS 'Lakhely',
+CASE
+    WHEN e.varos = 'Budapest' THEN 'Fővárosi'
+    ELSE 'Nem fővárosi'
+END AS 'Fővárosi?'
+FROM elofizeto e;
+
+#melyik hónapban hány előfizetés történt
+SELECT DATE_FORMAT(ue.datum, '%M') AS 'Hónap', COUNT(*) AS 'Előfizetések száma'
+FROM ujsag_elofizeto ue
+GROUP BY DATE_FORMAT(ue.datum, '%m');
